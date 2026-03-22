@@ -1,0 +1,320 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id               String   @id @default(uuid())
+  email            String   @unique
+  passwordHash     String?
+  role             Role
+  name             String
+  profilePhotoUrl  String?
+  area             String?
+  lat              Float?
+  lng              Float?
+  googleId         String?  @unique
+  reliabilityScore Int      @default(100)
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  farm             Farm?
+  buyerOrders      Order[]  @relation("BuyerOrders")
+  growerOrders     Order[]  @relation("GrowerOrders")
+  notifications    Notification[]
+  sentMessages     Message[]
+  reviews          Review[] @relation("ReviewsByUser")
+  receivedReviews  Review[] @relation("ReviewsForUser")
+  vouches          Vouch[]  @relation("VouchesByBuyer")
+  buyerRequests    BuyerRequest[]
+  subscriptions    Subscription[]
+}
+
+enum Role {
+  grower
+  buyer
+  admin
+}
+
+model Farm {
+  id           String   @id @default(uuid())
+  growerId     String   @unique
+  grower       User     @relation(fields: [growerId], references: [id])
+  farmName     String
+  story        String?
+  heroPhotoUrl String?
+  galleryUrls  String[]
+  practices    String[]
+  lat          Float?
+  lng          Float?
+  trustScore   Int      @default(0)
+  trustTier    TrustTier @default(seedling)
+  vouchCount   Int      @default(0)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  listings     Listing[]
+  vouches      Vouch[]
+}
+
+enum TrustTier {
+  seedling
+  grower
+  community_verified
+  admin_verified
+}
+
+model ListingCategory {
+  id       String    @id @default(uuid())
+  name     String    @unique
+  iconUrl  String?
+  listings Listing[]
+}
+
+model Listing {
+  id                String   @id @default(uuid())
+  farmId            String
+  farm              Farm     @relation(fields: [farmId], references: [id])
+  growerId          String
+  title             String
+  description       String?
+  categoryId        String
+  category          ListingCategory @relation(fields: [categoryId], references: [id])
+  pricePerUnit      Float
+  unitLabel         String
+  quantityAvailable Int
+  quantityReserved  Int      @default(0)
+  harvestDate       DateTime
+  availableFrom     DateTime?
+  availableUntil    DateTime?
+  isOrganic         Boolean  @default(false)
+  isSurplus         Boolean  @default(false)
+  listingType       ListingType @default(standard)
+  status            ListingStatus @default(active)
+  photos            String[]
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  orders       Order[]
+  reservations Reservation[]
+}
+
+enum ListingType {
+  standard
+  surplus
+}
+
+enum ListingStatus {
+  active
+  inactive
+  sold_out
+}
+
+model Order {
+  id                 String      @id @default(uuid())
+  buyerId            String
+  buyer              User        @relation("BuyerOrders", fields: [buyerId], references: [id])
+  growerId           String
+  grower             User        @relation("GrowerOrders", fields: [growerId], references: [id])
+  listingId          String
+  listing            Listing     @relation(fields: [listingId], references: [id])
+  quantity           Int
+  unitPrice          Float
+  totalAmount        Float
+  status             OrderStatus @default(pending)
+  paymentMethod      PaymentMethod
+  paymentStatus      PaymentStatus @default(pending)
+  pickupSlotId       String?
+  cancellationReason String?
+  disputeReason      String?
+  disputeResolution  String?
+  createdAt          DateTime    @default(now())
+  updatedAt          DateTime    @updatedAt
+
+  reservation  Reservation?
+  conversation Conversation?
+  reviews      Review[]
+  payment      Payment?
+}
+
+enum OrderStatus {
+  pending
+  accepted
+  ready
+  picked_up
+  completed
+  cancelled
+  disputed
+}
+
+enum PaymentMethod {
+  cod
+  mock_online
+}
+
+enum PaymentStatus {
+  pending
+  paid
+}
+
+model Reservation {
+  id               String            @id @default(uuid())
+  listingId        String
+  listing          Listing           @relation(fields: [listingId], references: [id])
+  orderId          String            @unique
+  order            Order             @relation(fields: [orderId], references: [id])
+  quantityReserved Int
+  expiresAt        DateTime
+  status           ReservationStatus @default(active)
+  createdAt        DateTime          @default(now())
+}
+
+enum ReservationStatus {
+  active
+  confirmed
+  released
+}
+
+model PickupSlot {
+  id               String   @id @default(uuid())
+  growerId         String
+  dayOfWeek        Int
+  startTime        String
+  endTime          String
+  maxOrdersPerSlot Int      @default(5)
+  isActive         Boolean  @default(true)
+}
+
+model Conversation {
+  id        String    @id @default(uuid())
+  orderId   String    @unique
+  order     Order     @relation(fields: [orderId], references: [id])
+  buyerId   String
+  growerId  String
+  createdAt DateTime  @default(now())
+
+  messages  Message[]
+}
+
+model Message {
+  id             String       @id @default(uuid())
+  conversationId String
+  conversation   Conversation @relation(fields: [conversationId], references: [id])
+  senderId       String
+  sender         User         @relation(fields: [senderId], references: [id])
+  content        String
+  isRead         Boolean      @default(false)
+  createdAt      DateTime     @default(now())
+}
+
+model Review {
+  id         String   @id @default(uuid())
+  orderId    String
+  order      Order    @relation(fields: [orderId], references: [id])
+  reviewerId String
+  reviewer   User     @relation("ReviewsByUser", fields: [reviewerId], references: [id])
+  revieweeId String
+  reviewee   User     @relation("ReviewsForUser", fields: [revieweeId], references: [id])
+  rating     Int
+  comment    String?
+  createdAt  DateTime @default(now())
+}
+
+model Vouch {
+  id        String   @id @default(uuid())
+  voucherId String
+  voucher   User     @relation("VouchesByBuyer", fields: [voucherId], references: [id])
+  growerId  String
+  farm      Farm     @relation(fields: [growerId], references: [id])
+  note      String?
+  createdAt DateTime @default(now())
+}
+
+model BuyerRequest {
+  id         String              @id @default(uuid())
+  buyerId    String
+  buyer      User                @relation(fields: [buyerId], references: [id])
+  cropName   String
+  categoryId String?
+  description String?
+  lat        Float?
+  lng        Float?
+  radiusKm   Int                 @default(10)
+  status     BuyerRequestStatus  @default(open)
+  expiresAt  DateTime
+  createdAt  DateTime            @default(now())
+}
+
+enum BuyerRequestStatus {
+  open
+  fulfilled
+  expired
+}
+
+model Subscription {
+  id            String             @id @default(uuid())
+  buyerId       String
+  buyer         User               @relation(fields: [buyerId], references: [id])
+  basketName    String
+  basketPrice   Float
+  growerId      String
+  status        SubscriptionStatus @default(active)
+  startDate     DateTime
+  nextOrderDate DateTime
+  createdAt     DateTime           @default(now())
+  updatedAt     DateTime           @updatedAt
+}
+
+enum SubscriptionStatus {
+  active
+  paused
+  cancelled
+}
+
+model Payment {
+  id          String        @id @default(uuid())
+  orderId     String        @unique
+  order       Order         @relation(fields: [orderId], references: [id])
+  amount      Float
+  method      PaymentMethod
+  status      PaymentStatus @default(pending)
+  confirmedBy String?
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+}
+
+model Notification {
+  id          String   @id @default(uuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id])
+  type        String
+  message     String
+  referenceId String?
+  isRead      Boolean  @default(false)
+  createdAt   DateTime @default(now())
+}
+
+model AuditLog {
+  id          String   @id @default(uuid())
+  entityType  String
+  entityId    String
+  action      String
+  oldValue    String?
+  newValue    String?
+  performedBy String
+  createdAt   DateTime @default(now())
+}
+
+model DemandStat {
+  id           String   @id @default(uuid())
+  area         String
+  cropName     String
+  searchCount  Int      @default(0)
+  requestCount Int      @default(0)
+  weekStart    DateTime
+  updatedAt    DateTime @updatedAt
+}
