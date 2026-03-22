@@ -10,7 +10,7 @@
 |-------|-----------|
 | Frontend | React 18 + Vite + Tailwind CSS |
 | Backend | Node.js + Express.js |
-| Database | PostgreSQL (Neon.tech) |
+| Database | PostgreSQL (Local / Render) |
 | ORM | Prisma |
 | Real-time | Socket.IO |
 | Maps | Leaflet.js + OpenStreetMap |
@@ -25,7 +25,7 @@
 - Node.js v18+
 - npm v9+
 - Git
-- A Neon.tech PostgreSQL database
+- Local PostgreSQL installation
 
 ### Backend Setup
 
