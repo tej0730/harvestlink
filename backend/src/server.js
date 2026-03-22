@@ -1,10 +1,12 @@
+// Load environment variables FIRST — before any other imports that need them
+require('dotenv').config();
+
 const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
 const cookieParser = require('cookie-parser');
 const rateLimit = require('express-rate-limit');
 const passport = require('./config/passport');
-require('dotenv').config();
 
 const app = express();
 
@@ -20,7 +22,7 @@ app.use(passport.initialize());
 
 // Rate limiting — stricter on auth routes
 const globalLimiter = rateLimit({ windowMs: 15 * 60 * 1000, max: 100 });
-const authLimiter   = rateLimit({ windowMs: 15 * 60 * 1000, max: 10 });
+const authLimiter   = rateLimit({ windowMs: 15 * 60 * 1000, max: 30 });
 app.use(globalLimiter);
 
 // ── Routes ────────────────────────────────────────────────────────────────────
