@@ -20,13 +20,16 @@ app.use(express.json());
 app.use(cookieParser());
 app.use(passport.initialize());
 
-// Rate limiting — stricter on auth routes
-const globalLimiter = rateLimit({ windowMs: 15 * 60 * 1000, max: 100 });
-const authLimiter   = rateLimit({ windowMs: 15 * 60 * 1000, max: 30 });
-app.use(globalLimiter);
+// Rate limiting — only in production (dev gets blocked too easily during testing)
+if (process.env.NODE_ENV === 'production') {
+  const globalLimiter = rateLimit({ windowMs: 15 * 60 * 1000, max: 100 });
+  const authLimiter   = rateLimit({ windowMs: 15 * 60 * 1000, max: 30 });
+  app.use(globalLimiter);
+  app.use('/api/auth', authLimiter);
+}
 
 // ── Routes ────────────────────────────────────────────────────────────────────
-app.use('/api/auth', authLimiter, require('./routes/auth.routes'));
+app.use('/api/auth', require('./routes/auth.routes'));
 
 // Health check
 app.get('/health', (req, res) => res.json({ status: 'ok' }));
