@@ -16,8 +16,8 @@ cron.schedule('0 23 * * 0', async () => {
         COALESCE(u.area, 'Unknown') AS area,
         LOWER(br."cropName")        AS crop_name,
         COUNT(*)::int               AS request_count
-      FROM buyer_requests br
-      JOIN users u ON br."buyerId" = u.id
+      FROM "BuyerRequest" br
+      JOIN "User" u ON br."buyerId" = u.id
       WHERE br."createdAt" >= ${weekStart}
       GROUP BY COALESCE(u.area, 'Unknown'), LOWER(br."cropName")
     `;

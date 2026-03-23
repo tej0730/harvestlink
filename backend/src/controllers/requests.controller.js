@@ -24,7 +24,7 @@ async function createRequest(req, res) {
     if (lat && lng) {
       const nearbyFarms = await prisma.$queryRaw`
         SELECT f.id, f."growerId"
-        FROM farms f
+        FROM "Farm" f
         WHERE f.lat IS NOT NULL AND f.lng IS NOT NULL
           AND (
             6371 * acos(
@@ -85,8 +85,8 @@ async function getNearbyRequests(req, res) {
             )
           )
         ) AS distance_km
-      FROM buyer_requests br
-      JOIN users u ON br."buyerId" = u.id
+      FROM "BuyerRequest" br
+      JOIN "User" u ON br."buyerId" = u.id
       WHERE br.status = 'open'
         AND br."expiresAt" > NOW()
         AND br.lat IS NOT NULL

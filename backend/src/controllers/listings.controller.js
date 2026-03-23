@@ -290,9 +290,9 @@ async function getNearbyListings(req, res) {
             + sin(radians(${buyerLat})) * sin(radians(f.lat)))
           )
         ) AS distance_km
-      FROM listings l
-      JOIN farms f    ON l."farmId" = f.id
-      JOIN listing_categories lc ON l."categoryId" = lc.id
+      FROM "Listing" l
+      JOIN "Farm" f    ON l."farmId" = f.id
+      JOIN "ListingCategory" lc ON l."categoryId" = lc.id
       WHERE l.status = 'active'
         AND f.lat IS NOT NULL
         AND f.lng IS NOT NULL
