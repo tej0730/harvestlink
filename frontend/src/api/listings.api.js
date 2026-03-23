@@ -12,3 +12,10 @@ export const createListing = (formData) =>
 
 export const updateListing    = (id, data) => api.put(`/listings/${id}`, data);
 export const deactivateListing = (id)      => api.delete(`/listings/${id}`);
+
+export const getNearbyListings = (params) =>
+  api.get('/listings/nearby', { params });
+
+export const getHeatmapData = () =>
+  api.get('/listings/heatmap');
+

@@ -8,7 +8,8 @@ import Login        from './pages/auth/Login';
 import Register     from './pages/auth/Register';
 import OAuthCallback from './pages/auth/OAuthCallback';
 import Dashboard    from './pages/Dashboard';
-import Explore       from './pages/Explore';
+import ExplorePage   from './pages/ExplorePage';
+import RequestBoard  from './pages/RequestBoard';
 import CreateListing from './pages/listings/CreateListing';
 
 // Protected route wrapper
@@ -40,7 +41,8 @@ export default function App() {
         <Route path="/dashboard" element={
           <ProtectedRoute><Dashboard /></ProtectedRoute>
         } />
-        <Route path="/explore" element={<Explore />} />
+        <Route path="/explore"  element={<ExplorePage />} />
+        <Route path="/requests" element={<RequestBoard />} />
         <Route path="/listings/create" element={
           <ProtectedRoute><CreateListing /></ProtectedRoute>
         } />

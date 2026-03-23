@@ -253,8 +253,105 @@ async function getCategories(req, res) {
   }
 }
 
+// ── GET NEARBY LISTINGS (geospatial) ─────────────────────────────────────────
+async function getNearbyListings(req, res) {
+  try {
+    const {
+      lat, lng,
+      radius = 10,
+      category,
+      isOrganic,
+      sortBy = 'distance'
+    } = req.query;
+
+    if (!lat || !lng) {
+      return res.status(400).json({ message: 'lat and lng are required' });
+    }
+
+    const buyerLat = parseFloat(lat);
+    const buyerLng = parseFloat(lng);
+    const radiusKm = parseFloat(radius);
+
+    const listings = await prisma.$queryRaw`
+      SELECT
+        l.*,
+        f.id          AS "farmId_",
+        f."farmName",
+        f.lat         AS "farmLat",
+        f.lng         AS "farmLng",
+        f."trustScore",
+        f."trustTier",
+        f."heroPhotoUrl",
+        lc.name       AS "categoryName",
+        (
+          6371 * acos(
+            LEAST(1.0, cos(radians(${buyerLat})) * cos(radians(f.lat))
+            * cos(radians(f.lng) - radians(${buyerLng}))
+            + sin(radians(${buyerLat})) * sin(radians(f.lat)))
+          )
+        ) AS distance_km
+      FROM listings l
+      JOIN farms f    ON l."farmId" = f.id
+      JOIN listing_categories lc ON l."categoryId" = lc.id
+      WHERE l.status = 'active'
+        AND f.lat IS NOT NULL
+        AND f.lng IS NOT NULL
+        AND (
+          6371 * acos(
+            LEAST(1.0, cos(radians(${buyerLat})) * cos(radians(f.lat))
+            * cos(radians(f.lng) - radians(${buyerLng}))
+            + sin(radians(${buyerLat})) * sin(radians(f.lat)))
+          )
+        ) <= ${radiusKm}
+      ORDER BY distance_km ASC
+      LIMIT 100
+    `;
+
+    let filtered = listings;
+    if (category)  filtered = filtered.filter(l => l.categoryName === category);
+    if (isOrganic) filtered = filtered.filter(l => l.isOrganic === true);
+
+    const enriched = filtered.map(l => {
+      const freshness = calculateFreshnessScore(
+        l.harvestDate, l.farmLat, l.farmLng, buyerLat, buyerLng
+      );
+      return { ...l, freshness };
+    });
+
+    return res.json({ listings: enriched, total: enriched.length });
+  } catch (err) {
+    console.error('getNearbyListings error:', err);
+    return res.status(500).json({ message: 'Server error' });
+  }
+}
+
+// ── GET HEATMAP DATA ──────────────────────────────────────────────────────────
+async function getHeatmapData(req, res) {
+  try {
+    const stats = await prisma.demandStat.findMany({
+      orderBy: [
+        { searchCount:  'desc' },
+        { requestCount: 'desc' }
+      ],
+      take: 200
+    });
+
+    const farms = await prisma.farm.findMany({
+      where: {
+        lat: { not: null },
+        lng: { not: null }
+      },
+      select: { lat: true, lng: true, farmName: true, trustScore: true }
+    });
+
+    return res.json({ demandStats: stats, farms });
+  } catch (err) {
+    return res.status(500).json({ message: 'Server error' });
+  }
+}
+
 module.exports = {
   getListings, getListingById, getMyListings,
   createListing, updateListing, deactivateListing,
-  getCategories
+  getCategories, getNearbyListings, getHeatmapData
 };

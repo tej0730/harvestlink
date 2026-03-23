@@ -6,12 +6,14 @@ const { upload }       = require('../utils/cloudinary');
 const {
   getListings, getListingById, getMyListings,
   createListing, updateListing, deactivateListing,
-  getCategories
+  getCategories, getNearbyListings, getHeatmapData
 } = require('../controllers/listings.controller');
 
 // Public
 router.get('/',            getListings);
 router.get('/categories',  getCategories);
+router.get('/nearby',      getNearbyListings);
+router.get('/heatmap',     getHeatmapData);
 router.get('/mine',        authenticate, requireRole('grower'), getMyListings);
 router.get('/:id',         getListingById);
 
