@@ -7,6 +7,7 @@ const helmet = require('helmet');
 const cookieParser = require('cookie-parser');
 const rateLimit = require('express-rate-limit');
 const passport = require('./config/passport');
+require('./jobs/releaseExpiredReservations');
 
 const app = express();
 
@@ -30,6 +31,7 @@ if (process.env.NODE_ENV === 'production') {
 
 // ── Routes ────────────────────────────────────────────────────────────────────
 app.use('/api/auth', require('./routes/auth.routes'));
+app.use('/api/listings', require('./routes/listings.routes'));
 
 // Health check
 app.get('/health', (req, res) => res.json({ status: 'ok' }));
