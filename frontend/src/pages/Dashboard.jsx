@@ -2,6 +2,7 @@ import useAuthStore from '../store/authStore';
 import { useNavigate } from 'react-router-dom';
 import { logoutUser } from '../api/auth.api';
 import toast from 'react-hot-toast';
+import NotificationBell from '../components/NotificationBell';
 
 export default function Dashboard() {
   const { user, clearAuth } = useAuthStore();
@@ -21,13 +22,16 @@ export default function Dashboard() {
         <h2 className="text-2xl font-bold text-gray-800">Welcome, {user?.name}!</h2>
         <p className="text-gray-500 mt-1 capitalize">Role: {user?.role}</p>
         <p className="text-gray-400 text-sm mt-1">{user?.email}</p>
-        <button
-          onClick={handleLogout}
-          className="mt-6 w-full bg-red-500 hover:bg-red-600 text-white
-                     font-semibold py-2.5 rounded-xl transition-colors"
-        >
-          Log Out
-        </button>
+        <div className="flex items-center gap-3 mt-6">
+          <NotificationBell />
+          <button
+            onClick={handleLogout}
+            className="flex-1 bg-red-500 hover:bg-red-600 text-white
+                       font-semibold py-2.5 rounded-xl transition-colors"
+          >
+            Log Out
+          </button>
+        </div>
       </div>
     </div>
   );

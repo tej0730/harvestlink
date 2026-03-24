@@ -11,6 +11,8 @@ import Dashboard    from './pages/Dashboard';
 import ExplorePage   from './pages/ExplorePage';
 import RequestBoard  from './pages/RequestBoard';
 import CreateListing from './pages/listings/CreateListing';
+import OrdersPage      from './pages/orders/OrdersPage';
+import OrderDetailPage from './pages/orders/OrderDetailPage';
 
 // Protected route wrapper
 function ProtectedRoute({ children }) {
@@ -43,6 +45,8 @@ export default function App() {
         } />
         <Route path="/explore"  element={<ExplorePage />} />
         <Route path="/requests" element={<RequestBoard />} />
+        <Route path="/orders"     element={<ProtectedRoute><OrdersPage /></ProtectedRoute>} />
+        <Route path="/orders/:id" element={<ProtectedRoute><OrderDetailPage /></ProtectedRoute>} />
         <Route path="/listings/create" element={
           <ProtectedRoute><CreateListing /></ProtectedRoute>
         } />
